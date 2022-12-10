@@ -48,14 +48,14 @@ setsebool -P httpd_can_network_connect 1
 systemctl restart nginx
 
 # Create a temporary directory for building
-unset INSTALL_DIR
-readonly INSTALL_DIR=/tmp/ghost-chat-install
+unset TMP_INSTALL_DIR
+readonly TMP_INSTALL_DIR=/tmp/ghost-chat-install
 
-if [ -d $INSTALL_DIR ]; then
-    rm -rf $INSTALL_DIR
+if [ -d $TMP_INSTALL_DIR ]; then
+    rm -rf $TMP_INSTALL_DIR
 fi
-mkdir $INSTALL_DIR
-cd $INSTALL_DIR
+mkdir $TMP_INSTALL_DIR
+cd $TMP_INSTALL_DIR
 
 # Build and deploy frontend webpage
 dnf install 
@@ -64,7 +64,7 @@ cd GhostChat/
 npm install
 npm run build
 rsync -a --delete dist/ /usr/share/nginx/html/
-cd $INSTALL_DIR
+cd $TMP_INSTALL_DIR
 
 # Configure MySQL
 systemctl start mysqld.service
@@ -92,13 +92,14 @@ mysql -uroot -p$MYSQL_ROOT_PASS < "$PWD/mysql_chat_init.sql"
 unset MYSQL_ROOT_PASS
 
 # Build and deploy backend server
+BACKEND_SERVER_DEPLOY_DIR=/usr/local/chat-server
 git clone https://github.com/hu-ximing/chat-server.git
 cd chat-server/
 chmod +x mvnw
 ./mvnw install
-mkdir /usr/local/chat-server/
-mv -f target/chat-server-*.jar /usr/local/chat-server/chat-server.jar
-cd $INSTALL_DIR
+mkdir $BACKEND_SERVER_DEPLOY_DIR
+mv -f target/chat-server-*.jar $BACKEND_SERVER_DEPLOY_DIR/chat-server.jar
+cd $TMP_INSTALL_DIR
 
 # Create application group and user
 useradd ghost-chat --no-create-home --shell /sbin/nologin --comment "Ghost Chat server"
@@ -117,7 +118,7 @@ Group=ghost-chat
 
 Type=simple
 
-ExecStart=java -jar /usr/local/chat-server/chat-server.jar
+ExecStart=java -jar $BACKEND_SERVER_DEPLOY_DIR/chat-server.jar
 ExecStop=/bin/kill -15 $MAINPID
 
 [Install]
