@@ -58,7 +58,6 @@ mkdir $TMP_INSTALL_DIR
 cd $TMP_INSTALL_DIR
 
 # Build and deploy frontend webpage
-dnf install 
 git clone https://github.com/LJC0414/GhostChat.git
 cd GhostChat/
 npm install
@@ -69,7 +68,7 @@ cd $TMP_INSTALL_DIR
 # Configure MySQL
 systemctl start mysqld.service
 systemctl enable mysqld.service
-if [ $MYSQL_HAS_INSTALLED -eq 1 ]; then
+if [ $MYSQL_HAS_INSTALLED -eq 0 ]; then
    mysql_secure_installation
 fi
 
